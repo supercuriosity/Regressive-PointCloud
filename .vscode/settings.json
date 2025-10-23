@@ -1,4 +1,8 @@
 {
+    "python.analysis.extraPaths": [
+        "./UST-SSM",
+        "./UST-SSM/modules"
+    ],
     "python-envs.defaultEnvManager": "ms-python.python:system",
     "python-envs.pythonProjects": []
 }
