@@ -116,7 +116,6 @@ def evaluate(model, criterion, data_loader, device):
 
 def main(args):
 
-
     if args.output_dir:
         utils.mkdir(args.output_dir)
         setup_logging(args.output_dir)  

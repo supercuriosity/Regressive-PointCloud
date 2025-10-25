@@ -1,0 +1,22 @@
+{
+  // 使用系统解释器（不创建或指向虚拟环境）
+  "python.defaultInterpreterPath": "/usr/bin/python3",
+
+  // 使用 Pylance 作为分析器并开启类型检查（basic 可减少误报，strict 更严格）
+  "python.languageServer": "Pylance",
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticMode": "workspace",
+
+  // 让分析器包含当前工作区根路径（方便导入模块）
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+
+  // 启用 lint（pylint）
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.flake8Enabled": false,
+
+  // 编辑器和格式设置（可选）
+  "editor.formatOnSave": false
+}
