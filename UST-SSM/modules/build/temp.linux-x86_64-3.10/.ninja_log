@@ -1,0 +1,10 @@
+# ninja log v7
+34	28145	1761312220203775310	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/ball_query.o	bb19c5d144cf2715
+36	28369	1761312220207775309	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/group_points.o	2cd717b477265949
+37	28455	1761312220207775309	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/interpolate.o	8f0b8e30f43fd71b
+39	28651	1761312220207775309	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/sampling.o	5cdb0a4199132d1d
+35	28701	1761312220203775310	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/bindings.o	5c37d97d5e491107
+35	78299	1761312220203775310	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/ball_query_gpu.o	238152ffcd40e4c1
+37	79339	1761312220207775309	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/group_points_gpu.o	470e90466c9d6b91
+38	80138	1761312220207775309	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/interpolate_gpu.o	1ea4ff49533b2c5c
+39	82034	1761312220207775309	/data/haifeng/UST-SSM/modules/build/temp.linux-x86_64-3.10/_ext_src/src/sampling_gpu.o	3efb01d98348a4ce

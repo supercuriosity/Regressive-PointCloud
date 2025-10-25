@@ -1,0 +1,3 @@
+# ninja log v7
+33	26905	1761324078455724294	/data/haifeng/PointGPT/extensions/chamfer_dist/build/temp.linux-x86_64-3.10/chamfer_cuda.o	4cf581d86ea07e33
+33	280812	1761324078455724294	/data/haifeng/PointGPT/extensions/chamfer_dist/build/temp.linux-x86_64-3.10/chamfer.o	21fdbcde95f30cbe
