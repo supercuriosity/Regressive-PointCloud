@@ -1,0 +1,5 @@
+myvenv/
+*.whl
+env/
+venv/
+PointGPT/myvenv/
