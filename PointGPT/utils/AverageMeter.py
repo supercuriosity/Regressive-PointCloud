@@ -40,3 +40,5 @@ class AverageMeter(object):
             ]
         else:
             return self._sum[idx] / self._count[idx]
+
+# 作用：在训练/验证循环中累积并统计标量指标（loss、accuracy、时间等）的平均值、累计和计数。

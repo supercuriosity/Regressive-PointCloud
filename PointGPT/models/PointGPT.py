@@ -5,7 +5,7 @@ import timm
 from timm.models.layers import DropPath, trunc_normal_
 import numpy as np
 from .build import MODELS
-from utils import misc
+from utils.misc import fps
 from utils.checkpoint import get_missing_parameters_message, get_unexpected_parameters_message
 from utils.logger import *
 import random
@@ -154,7 +154,7 @@ class Group(nn.Module):
         '''
         batch_size, num_points, _ = xyz.shape
         # fps the centers out
-        center = misc.fps(xyz, self.num_group)  # B G 3
+        center = fps(xyz, self.num_group)  # B G 3
         # knn to get the neighborhood
         _, idx = self.knn(xyz, center)  # B G M
         assert idx.size(1) == self.num_group

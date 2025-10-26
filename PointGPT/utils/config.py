@@ -26,7 +26,7 @@ def merge_new_config(config, new_config):
                     try:
                         val = yaml.load(f, Loader=yaml.FullLoader)
                     except:
-                        val = yaml.load(f)
+                        val = yaml.safe_load(f)
                 config[key] = EasyDict()
                 merge_new_config(config[key], val)
             else:
@@ -44,7 +44,7 @@ def cfg_from_yaml_file(cfg_file):
         try:
             new_config = yaml.load(f, Loader=yaml.FullLoader)
         except:
-            new_config = yaml.load(f)
+            new_config = yaml.safe_load(f)
     merge_new_config(config=config, new_config=new_config)
     return config
 
@@ -68,3 +68,5 @@ def save_experiment_config(args, config, logger=None):
     os.system('cp %s %s' % (args.config, config_path))
     print_log(
         f'Copy the Config file from {args.config} to {config_path}', logger=logger)
+
+# 作用：解析/管理配置（通常从 YAML/JSON 加载），提供层级配置合并、默认值、命令行覆盖等操作；项目里的 cfgs/ 配置会被加载到这里

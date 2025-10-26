@@ -131,3 +131,5 @@ def _named_modules_with_dup(
             continue
         submodule_prefix = prefix + ("." if prefix else "") + name
         yield from _named_modules_with_dup(module, submodule_prefix)
+
+# 作用：保存和加载训练检查点（模型 state_dict、优化器状态、scheduler、当前 epoch、best score 等），并支持保存最佳模型和自动保留若干最近 checkpoint。

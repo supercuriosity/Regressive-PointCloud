@@ -144,3 +144,20 @@ class GPT_generator(nn.Module):
             1, 2).transpose(0, 1).reshape(batch * length, -1, 3)
 
         return rebuild_points
+
+'''
+Block:
+输入：x (seq_len, batch, embed_dim)，attn_mask (attn shape，见说明)
+输出：same shape (seq_len, batch, embed_dim)
+
+GPT_extractor.forward:
+输入：h (batch, length, C)，pos (batch, length, C)，attn_mask (应匹配序列长度)，classify (bool)
+输出：
+如果 classify=False：encoded_points (batch, length, embed_dim)
+如果 classify=True： (logits (batch, num_classes), encoded_points (batch, length_or_length+1, embed_dim))
+
+GPT_generator.forward:
+输入：h (batch, length, C)，pos (batch, length, C)，attn_mask
+输出：rebuild_points，形状为 (batch * length, group_size, 3)    
+
+'''

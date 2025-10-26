@@ -80,3 +80,8 @@ def get_z_values(data):
     z = get_z_order(points_round[:, 0], points_round[:, 1], points_round[:, 2])
 
     return z
+
+
+'''
+这个文件包含用于计算点云数据的Z-order（Morton order）编码的函数。Z-order编码通过将三维坐标的位分离并交织在一起来生成一个一维索引，从而保留空间局部性。
+'''

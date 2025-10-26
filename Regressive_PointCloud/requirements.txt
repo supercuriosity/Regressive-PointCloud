@@ -1,0 +1,15 @@
+matplotlib
+numpy
+pyyaml
+scipy
+timm==0.4.5
+tqdm
+ipdb
+causal-conv1d
+easydict
+h5py
+open3d==0.18.0
+opencv-python
+tensorboardX
+transforms3d
+termcolor

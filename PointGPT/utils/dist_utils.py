@@ -21,7 +21,7 @@ def _init_dist_pytorch(backend, **kwargs):
     num_gpus = torch.cuda.device_count()
     torch.cuda.set_device(rank % num_gpus)
     dist.init_process_group(backend=backend, **kwargs)
-    print(f'init distributed in rank {torch.distributed.get_rank()}')
+    print(f'init distributed in rank {dist.get_rank()}')
 
 
 def get_dist_info():
@@ -43,12 +43,14 @@ def reduce_tensor(tensor, args):
         for acc kind, get the mean in each gpu
     '''
     rt = tensor.clone()
-    torch.distributed.all_reduce(rt, op=torch.distributed.ReduceOp.SUM)
+    dist.all_reduce(rt, op=dist.ReduceOp.SUM)
     rt /= args.world_size
     return rt
 
 def gather_tensor(tensor, args):
     output_tensors = [tensor.clone() for _ in range(args.world_size)]
-    torch.distributed.all_gather(output_tensors, tensor)
+    dist.all_gather(output_tensors, tensor)
     concat = torch.cat(output_tensors, dim=0)
     return concat
+
+# 作用 ： 初始化分布式训练环境，提供获取分布式信息和张量操作的工具函数，支持多GPU协同训练。

@@ -89,7 +89,7 @@ class NTU60Subject_SK(Dataset):
                     if not os.path.exists(video_file):
                         continue
 
-                    # 跳过太短的视频 (发颠)
+                    # 跳过太短的视频 
                     min_frames = nframes_meta
                     if min_frames < frames_per_clip * step_between_clips:
                         continue

@@ -19,9 +19,9 @@ def get_root_logger(log_file=None, log_level=logging.INFO, name='main'):
         :obj:`logging.Logger`: The obtained logger
     """
     logger = get_logger(name=name, log_file=log_file, log_level=log_level)
-    # add a logging filter
+    # add a logging filter that allows records from this logger (and its children)
     logging_filter = logging.Filter(name)
-    logging_filter.filter = lambda record: record.find(name) != -1
+    logger.addFilter(logging_filter)
 
     return logger
 
@@ -67,7 +67,7 @@ def get_logger(name, log_file=None, log_level=logging.INFO, file_mode='w'):
             handler.setLevel(logging.ERROR)
 
     stream_handler = logging.StreamHandler()
-    handlers = [stream_handler]
+    handlers: list[logging.Handler] = [stream_handler]
 
     if dist.is_available() and dist.is_initialized():
         rank = dist.get_rank()
@@ -125,3 +125,5 @@ def print_log(msg, logger=None, level=logging.INFO):
         raise TypeError(
             'logger should be either a logging.Logger object, str, '
             f'"silent" or None, but got {type(logger)}')
+
+# 作用：提供统一的日志记录接口，支持控制台和文件输出，适应分布式训练环境，方便调试和监控程序运行状态。
