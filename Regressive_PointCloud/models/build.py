@@ -1,5 +1,4 @@
-from utils.registry import Registry
-
+from Regressive_PointCloud.utils.registry import Registry
 
 MODELS = Registry('models')
 

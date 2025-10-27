@@ -53,7 +53,7 @@ from ipdb import set_trace as st
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-
+# 作用：初始化神经网络模块的权重，特别是线性层和嵌入层，并根据需要调整残差连接的权重规模，以确保训练的稳定性和性能。
 def _init_weights(
         module,
         n_layer,
@@ -127,6 +127,12 @@ def create_block(
     object.__setattr__(block, "layer_idx", -1 if layer_idx is None else int(layer_idx))
     return block
 
+
+
+
+# 流程:1. 定义UST类，继承自nn.Module。
+# 2. 在初始化方法中，设置各种网络参数和层，包括P4DConv层、位置嵌入、SSM块和MLP头。
+# 3. 在前向传播方法中，处理输入数据，应用各个网络层，并最终输出分类结果。
 
 class UST(nn.Module):
     def __init__(self, radius, nsamples, spatial_stride,                               
@@ -306,7 +312,7 @@ class UST(nn.Module):
 
 
 
-
+# 作用：实现PointNet网络结构，用于从点云数据中提取全局特征表示，适用于分类和分割任务。
 class TNet(nn.Module):
     def __init__(self, k=3):
         super(TNet, self).__init__()

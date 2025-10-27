@@ -247,3 +247,5 @@ def decode(hilberts, num_dims, num_bits):
 
     # Return them in the expected shape.
     return flat_locs.reshape((*orig_shape, num_dims))
+
+# 作用：实现了一个带有预热阶段的多步学习率调度器，用于在训练过程中动态调整学习率，以提高模型的收敛速度和性能。

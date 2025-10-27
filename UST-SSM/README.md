@@ -98,7 +98,7 @@ To evaluate a trained model, provide the path to your model checkpoint (`.pth` f
 
 ```bash
 python test.py --config cfgs/msr-action3d_config.yaml --data_path /path/to/processed_data --checkpoint /path/to/your/model.pth
-```
+``` 
 
 -----
 

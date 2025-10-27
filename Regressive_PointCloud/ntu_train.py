@@ -67,7 +67,8 @@ def train_one_epoch(model, criterion,criterion_2, optimizer, lr_scheduler, data_
 
         # 2. 计算损失：交叉熵损失（预测值与真实标签的差异）
         loss = criterion(output, target)
-        
+        # loss = criterion_2(output, target)
+
         # 3. 反向传播与参数更新
         optimizer.zero_grad()
         loss.backward()
@@ -167,6 +168,7 @@ def evaluate(model, criterion, data_loader, device):
 
 def main(args):
 
+    #args来自parse_args函数，见下文。
     if args.output_dir:
         utils.mkdir(args.output_dir)
         setup_logging(args.output_dir)  
@@ -224,15 +226,18 @@ def main(args):
         model = nn.DataParallel(model)
     model.to(device)
 
+    #参数设置
     criterion = nn.CrossEntropyLoss()
     criterion_2 = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
-
+    
+    # 学习率调度器：WarmupMultiStepLR（预热+多阶段衰减）
     warmup_iters = args.lr_warmup_epochs * len(data_loader)
     lr_milestones = [len(data_loader) * m for m in args.lr_milestones]
     lr_scheduler = WarmupMultiStepLR(optimizer, milestones=lr_milestones, gamma=args.lr_gamma,
                                      warmup_iters=warmup_iters, warmup_factor=1e-5)
 
+    # 从断点续训加载模型
     if args.resume:
         checkpoint = torch.load(args.resume, map_location='cpu')
         model.load_state_dict(checkpoint['model'])
@@ -255,7 +260,9 @@ def main(args):
                 'epoch': epoch,
                 'args': args
             }
+            # 保存模型和优化器状态
             utils.save_on_master(checkpoint, os.path.join(args.output_dir, f'model_{epoch}.pth'))
+            # 保存最新的检查点
             utils.save_on_master(checkpoint, os.path.join(args.output_dir, 'checkpoint.pth'))
 
     total_time = time.time() - start_time
@@ -268,6 +275,7 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='UST-SSM Model Training')
 
+    # Basic parameters
     parser.add_argument('--data-path', default='/data2/NTU120RGBD/pointcloud/ntu60npz2048', type=str, help='dataset')
     parser.add_argument('--sk-path', default='/data1/NTU120RGB/nturgb+d_skeletons_npy', type=str, help='dataset')
     parser.add_argument('--data-meta', default='/data2/NTU120RGBD/ntu60.list', help='dataset')
@@ -305,7 +313,7 @@ def parse_args():
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')
 
     args = parser.parse_args()
-
+    
     return args
 
 if __name__ == "__main__":

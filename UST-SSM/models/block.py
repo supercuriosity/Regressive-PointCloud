@@ -87,3 +87,5 @@ class Block(nn.Module):
 
     def allocate_inference_cache(self, batch_size, max_seqlen, dtype=None, **kwargs):
         return self.mixer.allocate_inference_cache(batch_size, max_seqlen, dtype=dtype, **kwargs)
+
+# 作用：定义了一个神经网络模块Block，封装了一个混合器类（mixer_cls），并结合了LayerNorm/RMSNorm和残差连接，用于高效地处理输入数据。

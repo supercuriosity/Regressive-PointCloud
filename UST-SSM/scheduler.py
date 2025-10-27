@@ -46,3 +46,5 @@ class WarmupMultiStepLR(torch.optim.lr_scheduler._LRScheduler):
             for base_lr in self.base_lrs
         ]
 # UST-SSM
+
+# 作用：实现了一个带有预热阶段的多步学习率调度器，用于在训练过程中动态调整学习率，以提高模型的收敛速度和性能。
