@@ -4,6 +4,12 @@ import os
 import argparse
 import multiprocessing # 多线程
 
+"""
+本代码是MSR-Action3D数据集专用的深度图(depth)转(to)点云文件(point4)脚本。
+将深度图序列转换为点云序列，保存为压缩npz文件
+输入：每个视频目录下的深度图帧（png格式）
+输出：每个视频对应的点云序列文件（npz格式）
+"""
 parser = argparse.ArgumentParser()
 parser.add_argument('--input-dir', default='Depth', help='Depth directory for input [default: Depth]')
 parser.add_argument('--output-dir', default='processed_data', help='Output processed data directory [default: processed_data]')

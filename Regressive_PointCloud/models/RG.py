@@ -6,12 +6,12 @@ import sys
 import os
 
 # Set up paths for the project
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(BASE_DIR)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) #即models文件夹
+ROOT_DIR = os.path.dirname(BASE_DIR) #即Regressive_PointCloud文件夹
 # keep runtime sys.path tweaks so running scripts from repo root works
 sys.path.append(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'modules'))
-
+#确保可以读取modules文件夹下的模块
 from point_4d_convolution import * 
 
 import math
@@ -36,4 +36,3 @@ class RG(nn.Module):
     def forward(self, inputs):
         device = inputs.get_device()
         
-
