@@ -4,7 +4,6 @@ import logging
 import os
 import time
 import sys
-import yaml
 import numpy as np
 import random
 import torch
@@ -17,12 +16,9 @@ from torchvision import transforms
 import utils
 from scheduler import WarmupMultiStepLR
 from datasets.msr_sk import MSRAction3D_SK
-import models.RG as Models
+import models.UST as Models
 from ipdb import set_trace as st
-'''
-本文结构与ntu_train.py类似，区别在于数据集和部分参数不同。
-因此略写注释，详见ntu_train.py
-'''
+
 
 def setup_logging(output_dir):
     logging.basicConfig(
@@ -45,23 +41,29 @@ def train_one_epoch(model, criterion,criterion_2, optimizer, lr_scheduler, data_
 
     for (clip, target_sk), target, _ in metric_logger.log_every(data_loader, print_freq, header):
         start_time = time.time()
-        clip, target = clip.to(device), target.to(device)
+        clip, target,target_sk = clip.to(device), target.to(device),target_sk.to(device)
 
-        output = model(clip)
+        idx = []
+        for t in range(args.temporal_kernel_size//2 - 1, args.clip_len-args.temporal_kernel_size//2, args.temporal_stride):  
+            idx.append(t)
+        target_sk = target_sk[:,idx,:,:]
+
+        output, output_sk= model(clip)
     
-        loss = criterion(output, target)
+        loss_1 = 0.2*criterion_2(output_sk, target_sk)
+        loss_2 = criterion(output, target)
         
         optimizer.zero_grad()
-        loss.backward()
+        loss_1.backward(retain_graph=True)
+        loss_2.backward()
         optimizer.step()
 
         acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
         batch_size = clip.shape[0]
-        metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
+        metric_logger.update(loss=loss_2.item(),loss_sk=loss_1.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
         metric_logger.meters['clips/s'].update(batch_size / (time.time() - start_time))
-        
         lr_scheduler.step()
         sys.stdout.flush()
 
@@ -74,9 +76,10 @@ def evaluate(model, criterion, data_loader, device):
     with torch.no_grad():
         for (clip, target_sk), target, video_idx in metric_logger.log_every(data_loader, 100, header):
             clip = clip.to(device, non_blocking=True)
+            target_sk = target_sk.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
 
-            output = model(clip)
+            output,output_sk = model(clip)
             loss = criterion(output, target)
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
@@ -138,7 +141,7 @@ def main(args):
     device = torch.device('cuda')
 
     logging.info("Loading data")
-    dataset = MSRAction3D_SK( # 这里是MSRAction3D数据集
+    dataset = MSRAction3D_SK(
         root=args.data_path,
         skeleton_root=args.skeleton_path,
         frames_per_clip=args.clip_len,
@@ -216,11 +219,10 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='UST-SSM Model Training')
 
-    parser.add_argument('--config', default=None, type=str, help='Path to config file')
     parser.add_argument('--data-path', default='/data2/POINT4D/UST-SSM/datasets/MSR-Action3D', type=str, help='dataset')
     parser.add_argument('--skeleton-path', default='/data2/POINT4D/UST-SSM/datasets/MSRAction3DSkeletonReal3D', type=str, help='dataset')
     parser.add_argument('--seed', default=0, type=int, help='random seed')
-    parser.add_argument('--model', default='RG', type=str, help='model')
+    parser.add_argument('--model', default='UST', type=str, help='model')
     parser.add_argument('--clip-len', default=24, type=int, metavar='N', help='number of frames per clip')
     parser.add_argument('--clip-step', default=1, type=int, metavar='N', help='')
     parser.add_argument('--num-points', default=2048, type=int, metavar='N', help='number of points per frame')
@@ -248,26 +250,17 @@ def parse_args():
     parser.add_argument('--lr-warmup-epochs', default=10, type=int, help='number of warmup epochs')
     # output
     parser.add_argument('--print-freq', default=10, type=int, help='print frequency')
-    parser.add_argument('--output-dir', default='/data2/POINT4D/UST-SSM/output/msr', type=str, help='path where to save')
+    parser.add_argument('--output-dir', default='/data2/POINT4D/UST-SSM/output/msr_final2', type=str, help='path where to save')
     # resume
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')
 
     args = parser.parse_args()
 
-    # 如果提供了配置文件，加载并覆盖
-    if args.config:
-        with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
-        for key, value in config.items():
-            if not hasattr(args, key):
-                raise ValueError(f"Unknown config parameter: {key}")
-            setattr(args, key, value)
-            
     return args
 
 if __name__ == "__main__":
     args = parse_args()
     main(args)
 
-# Regressive_PointCloud
+# CUDA_VISIBLE_DEVICES=0 python msr-train.py

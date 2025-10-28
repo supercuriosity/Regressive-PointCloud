@@ -6,7 +6,7 @@ from glob import glob
 import concurrent.futures
 
 """
-本代码是ntu120数据集专用的深度图(depth)转(to)点云文件(point4)脚本。
+本代码是ntu60数据集专用的深度图(depth)转(to)点云文件(point4)脚本。
 将深度图序列转换为点云序列，保存为压缩npz文件
 输入：每个视频目录下的深度图帧（png格式）
 输出：每个视频对应的点云序列文件（npz格式）
@@ -73,10 +73,10 @@ def process_video(video_path, output_dir):
 def process_action(action):
     """
     处理单个动作类别的所有视频：批量找到该动作对应的所有视频目录，调用process_video处理
-    动作类别编码：假设输入目录中视频目录名含动作编号（如A001、A002...A120，对应动作1~120）
-    
+    动作类别编码：假设输入目录中视频目录名含动作编号（如A001、A002...A060，对应动作1~60）
+
     Args:
-        action (int): 动作编号（如1→A001，10→A010，120→A120）
+        action (int): 动作编号（如1→A001，10→A010，60→A060）
     """
     for video_path in sorted(glob(f'{args.input}/*A0{action:02d}')):
         process_video(video_path, args.output)
@@ -84,13 +84,13 @@ def process_action(action):
 
 def main():
     mkdir(args.output)
-    actions = range(1, 121)
+    actions = range(1, 61)
 
-    # 一共120个动作类别，使用多线程并行处理
+    # 一共60个动作类别，使用多线程并行处理
     with concurrent.futures.ThreadPoolExecutor() as executor:
         executor.map(process_action, actions)
 
 if __name__ == "__main__":
     main()
 
-# 注：此电脑中只含有ntu60数据集，后续根据情况进行代码微调。
+# 注：此电脑中只含有ntu60数据集

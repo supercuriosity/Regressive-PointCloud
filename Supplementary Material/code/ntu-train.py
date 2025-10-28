@@ -4,7 +4,6 @@ import logging
 import os
 import time
 import sys
-import yaml
 import numpy as np
 import random
 import torch
@@ -16,13 +15,10 @@ import torchvision
 from torchvision import transforms
 import utils
 from scheduler import WarmupMultiStepLR
-from datasets.msr_sk import MSRAction3D_SK
-import models.RG as Models
+from datasets.ntu60_sk import NTU60Subject_SK
+import models.UST as Models
 from ipdb import set_trace as st
-'''
-本文结构与ntu_train.py类似，区别在于数据集和部分参数不同。
-因此略写注释，详见ntu_train.py
-'''
+
 
 def setup_logging(output_dir):
     logging.basicConfig(
@@ -42,26 +38,32 @@ def train_one_epoch(model, criterion,criterion_2, optimizer, lr_scheduler, data_
     metric_logger.add_meter('clips/s', utils.SmoothedValue(window_size=10, fmt='{value:.3f}'))
 
     header = 'Epoch: [{}]'.format(epoch)
-
+    alpha = 0.05
     for (clip, target_sk), target, _ in metric_logger.log_every(data_loader, print_freq, header):
         start_time = time.time()
-        clip, target = clip.to(device), target.to(device)
+        clip, target,target_sk = clip.to(device), target.to(device),target_sk.to(device)
 
-        output = model(clip)
+        idx = []
+        for t in range(args.temporal_kernel_size//2 - 1, args.clip_len-args.temporal_kernel_size//2, args.temporal_stride):  
+            idx.append(t)
+        target_sk = target_sk[:,idx,:,:]
+
+        output, output_sk= model(clip)
     
-        loss = criterion(output, target)
+        loss_1 = alpha *criterion_2(output_sk, target_sk)
+        loss_2 = criterion(output, target)
         
         optimizer.zero_grad()
-        loss.backward()
+        loss_1.backward(retain_graph=True)
+        loss_2.backward()
         optimizer.step()
 
         acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
         batch_size = clip.shape[0]
-        metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
+        metric_logger.update(loss=loss_2.item(),loss_sk=loss_1.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
         metric_logger.meters['clips/s'].update(batch_size / (time.time() - start_time))
-        
         lr_scheduler.step()
         sys.stdout.flush()
 
@@ -74,9 +76,10 @@ def evaluate(model, criterion, data_loader, device):
     with torch.no_grad():
         for (clip, target_sk), target, video_idx in metric_logger.log_every(data_loader, 100, header):
             clip = clip.to(device, non_blocking=True)
+            target_sk = target_sk.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
 
-            output = model(clip)
+            output,output_sk = model(clip)
             loss = criterion(output, target)
 
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
@@ -138,18 +141,20 @@ def main(args):
     device = torch.device('cuda')
 
     logging.info("Loading data")
-    dataset = MSRAction3D_SK( # 这里是MSRAction3D数据集
+    dataset = NTU60Subject_SK(
         root=args.data_path,
-        skeleton_root=args.skeleton_path,
+        skeleton_root=args.sk_path,
+        meta=args.data_meta,
         frames_per_clip=args.clip_len,
         step_between_clips=args.clip_step,
         num_points=args.num_points,
         train=True
     )
 
-    dataset_test = MSRAction3D_SK(
+    dataset_test = NTU60Subject_SK(
         root=args.data_path,
-        skeleton_root=args.skeleton_path,
+        skeleton_root=args.sk_path,
+        meta=args.data_meta,
         frames_per_clip=args.clip_len,
         step_between_clips=args.clip_step,
         num_points=args.num_points,
@@ -216,58 +221,48 @@ def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='UST-SSM Model Training')
 
-    parser.add_argument('--config', default=None, type=str, help='Path to config file')
-    parser.add_argument('--data-path', default='/data2/POINT4D/UST-SSM/datasets/MSR-Action3D', type=str, help='dataset')
-    parser.add_argument('--skeleton-path', default='/data2/POINT4D/UST-SSM/datasets/MSRAction3DSkeletonReal3D', type=str, help='dataset')
+    parser.add_argument('--data-path', default='/data2/NTU120RGBD/pointcloud/ntu60npz2048', type=str, help='dataset')
+    parser.add_argument('--sk-path', default='/data1/NTU120RGB/nturgb+d_skeletons_npy', type=str, help='dataset')
+    parser.add_argument('--data-meta', default='/data2/NTU120RGBD/ntu60.list', help='dataset')
     parser.add_argument('--seed', default=0, type=int, help='random seed')
-    parser.add_argument('--model', default='RG', type=str, help='model')
+    parser.add_argument('--model', default='UST', type=str, help='model')
     parser.add_argument('--clip-len', default=24, type=int, metavar='N', help='number of frames per clip')
-    parser.add_argument('--clip-step', default=1, type=int, metavar='N', help='')
+    parser.add_argument('--clip-step', default=2, type=int, metavar='N', help='steps between frame sampling')
     parser.add_argument('--num-points', default=2048, type=int, metavar='N', help='number of points per frame')
-    parser.add_argument('--radius', default=0.3, type=float, help='radius for the ball query')
+    parser.add_argument('--radius', default=0.10, type=float, help='radius for the ball query')
     parser.add_argument('--nsamples', default=32, type=int, help='number of neighbors for the ball query')
     parser.add_argument('--spatial-stride', default=32, type=int, help='spatial subsampling rate')
     parser.add_argument('--temporal-kernel-size', default=3, type=int, help='temporal kernel size')
     parser.add_argument('--temporal-stride', default=2, type=int, help='temporal stride')
-    parser.add_argument('--dim', default=160, type=int, help='ssm dim')  
-    parser.add_argument('--depth', default=1, type=int, help='ssm depth') 
-    parser.add_argument('--heads', default=6, type=int, help='ssm head')
-    parser.add_argument('--mlp-dim', default=320, type=int, help='mlp dim')
-    parser.add_argument('--hos-branches-num', default=3, type=int)
-    parser.add_argument('--encoder-channel', default=60, type=float)    
+    parser.add_argument('--dim', default=1024, type=int, help='ssm dim')  
+    parser.add_argument('--depth', default=3, type=int, help='ssm depth') 
+    parser.add_argument('--heads', default=8, type=int, help='ssm head')
+    parser.add_argument('--mlp-dim', default=2048, type=int, help='mlp dim')
+    parser.add_argument('--hos-branches-num', default=1, type=int)
+    parser.add_argument('--encoder-channel', default=75, type=float)    
 
-    parser.add_argument('--dropout', default=0.0, type=float, help='classifier dropout')
-    parser.add_argument('-b', '--batch-size', default=16, type=int)
+    parser.add_argument('--dropout', default=0.5, type=float, help='classifier dropout')
+    parser.add_argument('-b', '--batch-size', default=12, type=int)
     parser.add_argument('--epochs', default=50, type=int, metavar='N', help='number of total epochs to run')
-    parser.add_argument('-j', '--workers', default=32,type=int, metavar='N', help='number of data loading workers (default: 32)')
-    parser.add_argument('--lr', default=0.01, type=float, help='initial learning rate')  
+    parser.add_argument('-j', '--workers', default=64, type=int, metavar='N', help='number of data loading workers (default: 16)')
+    parser.add_argument('--lr', default=0.01, type=float, help='initial learning rate')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)', dest='weight_decay')
-    parser.add_argument('--lr-milestones', nargs='+', default=[20, 30], type=int, help='decrease lr on milestones')
+    parser.add_argument('--lr-milestones', nargs='+', default=[10, 15], type=int, help='decrease lr on milestones')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--lr-warmup-epochs', default=10, type=int, help='number of warmup epochs')
-    # output
-    parser.add_argument('--print-freq', default=10, type=int, help='print frequency')
-    parser.add_argument('--output-dir', default='/data2/POINT4D/UST-SSM/output/msr', type=str, help='path where to save')
+    parser.add_argument('--print-freq', default=100, type=int, help='print frequency')
+    parser.add_argument('--output-dir', default='/data2/POINT4D/UST-SSM/output/ntu_final2', type=str, help='path where to save')
     # resume
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')
 
     args = parser.parse_args()
 
-    # 如果提供了配置文件，加载并覆盖
-    if args.config:
-        with open(args.config, 'r') as f:
-            config = yaml.safe_load(f)
-        for key, value in config.items():
-            if not hasattr(args, key):
-                raise ValueError(f"Unknown config parameter: {key}")
-            setattr(args, key, value)
-            
     return args
 
 if __name__ == "__main__":
     args = parse_args()
     main(args)
 
-# Regressive_PointCloud
+# CUDA_VISIBLE_DEVICES=1 python ntu-train.py
