@@ -65,7 +65,7 @@ def process_one_file(filename):
     for d in range(depth.shape[0]): #这里的操作与ntu120相同，都是把深度图转为点云
         depth_map = depth[d]
 
-        depth_min = depth_map[depth_map > 0].min()
+        depth_min = depth_map[depth_map > 0].min() #无用的
         depth_map = depth_map
 
         x = xx[depth_map > 0]
