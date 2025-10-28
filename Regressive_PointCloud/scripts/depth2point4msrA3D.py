@@ -1,8 +1,8 @@
 import struct
 import numpy as np
 import os
-import multiprocessing
 import argparse
+import multiprocessing # 多线程
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input-dir', default='Depth', help='Depth directory for input [default: Depth]')
@@ -90,6 +90,8 @@ if __name__ == "__main__":
 
     # 过滤非.bin文件（可选：避免处理无关文件，如.txt/.log）
     files = [f for f in files if f.endswith('.bin')]
+    
+    files.sort() # 排序文件列表，确保处理顺序一致
     pool = multiprocessing.Pool(num_cpu) # 用多线程
 
     for input_file in files:
