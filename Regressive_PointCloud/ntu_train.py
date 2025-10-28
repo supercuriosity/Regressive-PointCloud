@@ -4,6 +4,7 @@ import logging
 import os
 import time
 import sys
+import yaml
 import numpy as np
 import random
 import torch
@@ -16,7 +17,7 @@ from torchvision import transforms
 import utils
 from scheduler import WarmupMultiStepLR
 from datasets.ntu60_sk import NTU60Subject_SK
-import models.UST as Models
+import models.RG as Models
 from ipdb import set_trace as st
 
 
@@ -273,14 +274,15 @@ def main(args):
 
 def parse_args():
     import argparse
-    parser = argparse.ArgumentParser(description='UST-SSM Model Training')
+    parser = argparse.ArgumentParser(description='RG Model Training')
 
     # Basic parameters
+    parser.add_argument('--config', default=None, type=str, help='Path to config file')
     parser.add_argument('--data-path', default='/data2/NTU120RGBD/pointcloud/ntu60npz2048', type=str, help='dataset')
     parser.add_argument('--sk-path', default='/data1/NTU120RGB/nturgb+d_skeletons_npy', type=str, help='dataset')
     parser.add_argument('--data-meta', default='/data2/NTU120RGBD/ntu60.list', help='dataset')
     parser.add_argument('--seed', default=0, type=int, help='random seed')
-    parser.add_argument('--model', default='UST', type=str, help='model')
+    parser.add_argument('--model', default='RG', type=str, help='model')
     parser.add_argument('--clip-len', default=24, type=int, metavar='N', help='number of frames per clip')
     parser.add_argument('--clip-step', default=2, type=int, metavar='N', help='steps between frame sampling')
     parser.add_argument('--num-points', default=2048, type=int, metavar='N', help='number of points per frame')
@@ -308,12 +310,22 @@ def parse_args():
     parser.add_argument('--lr-warmup-epochs', default=10, type=int, help='number of warmup epochs')
     parser.add_argument('--print-freq', default=100, type=int, help='print frequency')
     parser.add_argument('--output-dir', default='/data2/POINT4D/UST-SSM/output/ntu', type=str, help='path where to save')
-    # resume
+    
+    # resume (checkpoint)
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')
 
     args = parser.parse_args()
     
+    # 如果提供了配置文件，加载并覆盖
+    if args.config:
+        with open(args.config, 'r') as f:
+            config = yaml.safe_load(f)
+        for key, value in config.items():
+            if not hasattr(args, key):
+                raise ValueError(f"Unknown config parameter: {key}")
+            setattr(args, key, value)
+
     return args
 
 if __name__ == "__main__":

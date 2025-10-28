@@ -173,6 +173,7 @@ def main(args):
     criterion_2 = nn.MSELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
+    # 学习率调度器，详见 scheduler.py
     warmup_iters = args.lr_warmup_epochs * len(data_loader)
     lr_milestones = [len(data_loader) * m for m in args.lr_milestones]
     lr_scheduler = WarmupMultiStepLR(optimizer, milestones=lr_milestones, gamma=args.lr_gamma,
