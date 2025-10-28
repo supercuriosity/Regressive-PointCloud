@@ -308,9 +308,9 @@ def parse_args():
     parser.add_argument('--lr-milestones', nargs='+', default=[10, 15], type=int, help='decrease lr on milestones')
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
     parser.add_argument('--lr-warmup-epochs', default=10, type=int, help='number of warmup epochs')
+    #output
     parser.add_argument('--print-freq', default=100, type=int, help='print frequency')
     parser.add_argument('--output-dir', default='/data2/POINT4D/UST-SSM/output/ntu', type=str, help='path where to save')
-    
     # resume (checkpoint)
     parser.add_argument('--resume', default='', help='resume from checkpoint')
     parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='start epoch')

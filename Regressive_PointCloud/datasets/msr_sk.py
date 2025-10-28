@@ -7,9 +7,25 @@ from ipdb import set_trace as st
 
 
 class MSRAction3D_SK(Dataset):
+    """
+    针对MSR-Action3D数据集的自定义PyTorch Dataset类
+    功能：加载点云视频数据和对应的3D骨骼数据，生成训练/测试用的剪辑（clip）样本
+    适配任务：3D人体动作识别（论文4.2节核心实验数据集）
+    数据集特点：含20个动作类别，每个样本包含点云序列和20个关节点的骨骼序列
+    """
     def __init__(self, root, skeleton_root, frames_per_clip=54, step_between_clips=1, num_points=2048, train=True):
         super(MSRAction3D_SK, self).__init__()
-
+        """
+        初始化数据集，加载点云/骨骼数据并构建样本索引映射
+        
+        Args:
+            root (str): 点云数据根目录（存储格式为.npz的点云视频文件）
+            skeleton_root (str): 骨骼数据根目录（存储格式为.txt的3D骨骼文件）
+            frames_per_clip (int): 每个样本剪辑包含的帧数（论文中MSR-Action3D常用16/24/36，此处默认54，需根据实验调整）
+            step_between_clips (int): 生成剪辑时的帧步长（1表示连续取帧，无间隔）
+            num_points (int): 每帧点云的采样点数（论文4.2节固定为2048，统一输入维度）
+            train (bool): 是否为训练集（True=加载训练数据，False=加载测试数据）
+        """
         self.videos = []
         self.skeletons = []  
         self.labels = []
@@ -94,3 +110,4 @@ class MSRAction3D_SK(Dataset):
         return (clip.astype(np.float32), np.array(skeleton_clip).astype(np.float32)), label, index
 
 
+#Regressive_PointCloud

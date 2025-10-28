@@ -1,10 +1,7 @@
 import struct
 import numpy as np
 import os
-try:
-    import cv2
-except Exception:
-    cv2 = None
+import cv2
 import multiprocessing
 import argparse
 

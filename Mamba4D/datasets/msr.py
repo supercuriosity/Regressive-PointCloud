@@ -73,7 +73,7 @@ class MSRAction3D(Dataset):
         return clip.astype(np.float32), label, index
 
 if __name__ == '__main__':
-    dataset = MSRAction(root='../data/msr_action', frames_per_clip=16)
+    dataset = MSRAction3D(root='../data/msr_action', frames_per_clip=16)
     clip, label, video_idx = dataset[0]
     print(clip)
     print(label)
